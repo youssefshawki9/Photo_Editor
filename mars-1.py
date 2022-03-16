@@ -1,8 +1,9 @@
-import imghdr
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
+import scipy
 from scipy import ndimage
+import scipy.fftpack as fp
+import matplotlib.pyplot as plt
 
 
 #########################################
@@ -70,7 +71,7 @@ def spatialFiltering(imgFiltered, filter):
 
     if filter == 'lowpass':
         # src : source file ---- ddepth : depth of output image ---- ksize : blurring kernel size
-        imgValues = cv2.boxFilter(imgValues, -1, (7, 7))
+        imgValues = cv2.boxFilter(imgValues, -1, (51, 51))
 
     elif filter == 'median':
         # median acts as a=low-pass filter ---- blurring effect
@@ -81,8 +82,8 @@ def spatialFiltering(imgFiltered, filter):
         # kernel = np.array([[-1, -1, -1], [-1,  8, -1], [-1, -1, -1]])
         # imgValues = ndimage.convolve(imgValues, kernel)
         imgValues = cv2.boxFilter(imgValues, -1, (15, 15))
-        imgValues = imgFiltered[:,:,2] - imgValues
-        
+        imgValues = imgFiltered[:, :, 2] - imgValues
+
     elif filter == 'laplacian':
         # laplacian acts as hig-pass filter ---- edge detector
         # src : source file ---- ddepth : depth of output image ---- ksize : blurring kernel size
@@ -91,7 +92,7 @@ def spatialFiltering(imgFiltered, filter):
     imgFiltered[:, :, 2] = imgValues
     imgFiltered = cv2.cvtColor(imgFiltered, cv2.COLOR_HSV2BGR)
 
-    return imgFiltered
+    return imgFiltered, imgValues
 
 
 #########################################
@@ -103,14 +104,10 @@ imgOG = cv2.imread('rand.jpg')
 # keep filtered image under imgFiltered
 imgFiltered = imgOG.copy()
 
-imgFiltered = spatialFiltering(imgFiltered, 'highpass')
+imgFiltered, imgValues = spatialFiltering(imgFiltered, 'lowpass')
 
 
-cv2.imshow('OG', imgOG)
-cv2.imshow('filtered', imgFiltered)
-
-
-# high-pass && low-pass filtering implementation
+# # high-pass && low-pass filtering implementation
 
 # imgFiltered = cv2.cvtColor(imgFiltered, cv2.COLOR_BGR2HSV)
 # imgValues = imgFiltered[:,:,2]
@@ -120,9 +117,19 @@ cv2.imshow('filtered', imgFiltered)
 # imgFiltered[:,:,2] = ifimg
 # imgFiltered = cv2.cvtColor(imgFiltered, cv2.COLOR_HSV2BGR)
 
-# cv2.imshow('OG', imgOG)
 # cv2.imshow('res', res)
-# cv2.imshow('filtered', imgFiltered)
+
+
+cv2.imshow('OG', imgOG)
+cv2.imshow('filtered', imgFiltered)
+
+F1 = fp.fft2((imgValues).astype(float))
+F2 = fp.fftshift(F1)
+
+plt.figure(figsize=(10, 10))
+plt.imshow((20*np.log10(0.1 + F2)).astype(int), cmap=plt.cm.gray)
+plt.show()
+
 
 
 cv2.waitKey(0)
