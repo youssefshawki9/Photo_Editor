@@ -100,7 +100,8 @@ def spatialFiltering(imgFiltered, filter):
 #########################################
 
 # keep original image under imgOG
-imgOG = cv2.imread('rand.jpg')
+# imgOG = cv2.imread('rand.jpg')
+imgOG = cv2.imread('lena.png')
 # keep filtered image under imgFiltered
 imgFiltered = imgOG.copy()
 
