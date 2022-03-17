@@ -20,6 +20,20 @@ def showPlot(img):
 #########################################
 # HIGH PASS FILTER
 #########################################
+def toFFT(img):
+    F1 = fp.fft2((img).astype(float))
+    F2 = fp.fftshift(F1)
+    fft = (20*np.log10(0.1 + F2)).astype(int)
+    return F1, F2, fft
+
+def highPassFiltering(img, F2):
+    (w, h) = img.shape
+    half_w, half_h = int(w/2), int(h/2)
+    n = 50    # high pass size
+    F2[half_w-n:half_w+n+1,half_h-n:half_h+n+1] = 0    # select all but the first 50x50 (low) frequencies
+    fft = (20*np.log10(0.1 + F2)).astype(int)
+    img = fp.ifft2(fp.ifftshift(F2)).real
+    return img, fft, F2
 
 
 #########################################
@@ -31,27 +45,17 @@ imgOG = cv2.imread('lena.png')
 # keep filtered image under imgFiltered
 imgFiltered = imgOG.copy()
 imgFiltered = cv2.cvtColor(imgOG, cv2.COLOR_BGR2HSV)
-
 imgOG = cv2.cvtColor(imgOG, cv2.COLOR_BGR2RGB)
 # showPlot(imgOG)
 
+# get v-channel from HSV format to apply filter
 imgValues = imgFiltered[:,:,2]
 
-F1 = fp.fft2((imgValues).astype(float))
-F2 = fp.fftshift(F1)
-fftOG = (20*np.log10(0.1 + F2)).astype(int)
-# showPlot(fftOG)
+# move to frequency domain then apply highpass filter
+F1, F2, fftOG = toFFT(imgValues)
+imgValues, fftHP, F2 = highPassFiltering(imgValues, F2)
 
-(w, h) = imgValues.shape
-half_w, half_h = int(w/2), int(h/2)
-# high pass filter
-n = 25
-F2[half_w-n:half_w+n+1,half_h-n:half_h+n+1] = 0 # select all but the first 50x50 (low) frequencies
-fftHP = (20*np.log10(0.1 + F2)).astype(int)
-(20*np.log10( 0.1 + F2)).astype(int)
-# showPlot(fftHP)
-
-imgValues = fp.ifft2(fp.ifftshift(F2)).real
+# overwrite v-vhannel in filtered image variable
 imgFiltered[:,:,2] = imgValues
 imgFiltered = cv2.cvtColor(imgFiltered, cv2.COLOR_HSV2RGB)
 # showPlot(imgFiltered)
@@ -60,9 +64,9 @@ plt.subplot(221), plt.imshow(imgOG), plt.title('Original Image')
 plt.axis('off')
 plt.subplot(222), plt.imshow(fftOG, 'gray'), plt.title('original freq')
 plt.axis('off')
-plt.subplot(223), plt.imshow(fftHP, 'gray'), plt.title('High pass filter')
+plt.subplot(223), plt.imshow(imgFiltered), plt.title('Effect after filtering')
+plt.subplot(224), plt.imshow(fftHP, 'gray'), plt.title('High pass filter')
 plt.axis('off')
-plt.subplot(224), plt.imshow(imgFiltered), plt.title('Effect after filtering')
 plt.axis('off')
 
 
