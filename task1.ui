@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1016</width>
-    <height>759</height>
+    <width>1057</width>
+    <height>777</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,36 +17,11 @@
    <string notr="true"/>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="PlotWidget" name="histoWidget" native="true">
-    <property name="geometry">
-     <rect>
-      <x>680</x>
-      <y>330</y>
-      <width>300</width>
-      <height>300</height>
-     </rect>
-    </property>
-    <property name="minimumSize">
-     <size>
-      <width>300</width>
-      <height>300</height>
-     </size>
-    </property>
-    <property name="maximumSize">
-     <size>
-      <width>300</width>
-      <height>300</height>
-     </size>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(170, 170, 255);</string>
-    </property>
-   </widget>
    <widget class="QPushButton" name="Equalize">
     <property name="geometry">
      <rect>
       <x>474</x>
-      <y>658</y>
+      <y>669</y>
       <width>93</width>
       <height>28</height>
      </rect>
@@ -59,7 +34,7 @@
     <property name="geometry">
      <rect>
       <x>11</x>
-      <y>661</y>
+      <y>672</y>
       <width>115</width>
       <height>22</height>
      </rect>
@@ -86,40 +61,15 @@
     </item>
     <item>
      <property name="text">
-      <string>Laplacian </string>
+      <string>Laplacian filter</string>
      </property>
     </item>
-   </widget>
-   <widget class="PlotWidget" name="fftWidget" native="true">
-    <property name="geometry">
-     <rect>
-      <x>680</x>
-      <y>30</y>
-      <width>300</width>
-      <height>300</height>
-     </rect>
-    </property>
-    <property name="minimumSize">
-     <size>
-      <width>300</width>
-      <height>300</height>
-     </size>
-    </property>
-    <property name="maximumSize">
-     <size>
-      <width>300</width>
-      <height>300</height>
-     </size>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(170, 170, 255);</string>
-    </property>
    </widget>
    <widget class="QLabel" name="imageview">
     <property name="geometry">
      <rect>
-      <x>60</x>
-      <y>30</y>
+      <x>11</x>
+      <y>36</y>
       <width>600</width>
       <height>600</height>
      </rect>
@@ -147,13 +97,64 @@
     <property name="geometry">
      <rect>
       <x>242</x>
-      <y>658</y>
+      <y>669</y>
       <width>93</width>
       <height>28</height>
      </rect>
     </property>
     <property name="text">
-     <string>Open</string>
+     <string>Browse</string>
+    </property>
+   </widget>
+   <widget class="PlotWidget" name="histoWidget" native="true">
+    <property name="geometry">
+     <rect>
+      <x>700</x>
+      <y>400</y>
+      <width>300</width>
+      <height>300</height>
+     </rect>
+    </property>
+    <property name="minimumSize">
+     <size>
+      <width>300</width>
+      <height>300</height>
+     </size>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(170, 170, 255);</string>
+    </property>
+   </widget>
+   <widget class="PlotWidget" name="fftWidget" native="true">
+    <property name="geometry">
+     <rect>
+      <x>680</x>
+      <y>20</y>
+      <width>300</width>
+      <height>300</height>
+     </rect>
+    </property>
+    <property name="minimumSize">
+     <size>
+      <width>300</width>
+      <height>300</height>
+     </size>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(170, 170, 255);</string>
+    </property>
+   </widget>
+   <widget class="QSlider" name="filterSize">
+    <property name="geometry">
+     <rect>
+      <x>710</x>
+      <y>350</y>
+      <width>251</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
     </property>
    </widget>
   </widget>
@@ -163,7 +164,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1016</width>
+     <width>1057</width>
      <height>26</height>
     </rect>
    </property>
@@ -178,7 +179,7 @@
   </widget>
   <action name="actionopen">
    <property name="text">
-    <string>open</string>
+    <string>Browse</string>
    </property>
   </action>
   <action name="actionremove">

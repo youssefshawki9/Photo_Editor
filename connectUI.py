@@ -1,4 +1,3 @@
-############################
 #### IMPORTS
 ############################
 
@@ -45,9 +44,11 @@ class MainWindow(QtWidgets.QMainWindow):
         ############################
         self.cvimg = [[]]
         self.actionopen.triggered.connect(lambda: self.open())
+        self.openButton.clicked.connect(lambda: self.open())
         self.Equalize.clicked.connect(lambda: self.equalize(self.cvimg))
         self.comboBox.currentIndexChanged.connect(
             lambda: self.spatialFiltering())
+        self.filterSize.valueChanged.connect(lambda: self.changeFilterSize())
 
         ############################
         #### GLOBAL VARIABLES
@@ -77,9 +78,14 @@ class MainWindow(QtWidgets.QMainWindow):
             "All Files (*);;PNG Files(*.png);; Jpg Files(*.jpg)")
         self.cvimg = cv2.imread(self.imagePath[0])
         self.Imgorigin = self.cvimg.copy()
+        self.comboBox.setCurrentText("Normal")
+        self.OGgray = cv2.cvtColor(self.Imgorigin, cv2.COLOR_BGR2GRAY)
+        _, _, self.fft = self.toFFT(self.OGgray)
         #cv image to Qpixmap
         qt_img = self.convertCvQt(self.cvimg)
         # display it
+        self.showHistogram(self.OGgray)
+        self.displayFFT()
         self.displayImage(qt_img)
 
     def convertCvQt(self, img):
@@ -94,12 +100,20 @@ class MainWindow(QtWidgets.QMainWindow):
                                         Qt.KeepAspectRatio)
         return QPixmap.fromImage(p)
 
+    def changeFilterSize(self):
+        self.size = self.filterSize.value
+        self.spatialFiltering()
+
     def displayImage(self, qtimg):
         self.imageview.clear()
         self.imageview.setPixmap(qtimg)
 
     def displayFFT(self):
-        pass
+        self.fftCanvas.axes.imshow(self.fft, 'gray', aspect="auto")
+        self.fftCanvas.axes.axis('off')
+        self.fftCanvas.draw()
+        self.fftWidget.setCentralItem(self.graph)
+        self.fftWidget.setLayout(self.fftLayout)
 
     def spatialFiltering(self):
         imgFiltered = cv2.cvtColor(self.Imgorigin, cv2.COLOR_BGR2HSV)
@@ -107,17 +121,17 @@ class MainWindow(QtWidgets.QMainWindow):
         filter = self.comboBox.currentText()
 
         if filter == 'Normal':
-            pass
+            _, _, self.fft = self.toFFT(self.OGgray)
 
         if filter == 'Low pass filter':
             F1, F2, fftOG = self.toFFT(imgValues)
-            imgValues, fftFiltered, F2 = self.lowPassFiltering(imgValues, F2)
+            imgValues, self.fft, F2 = self.lowPassFiltering(imgValues, F2)
 
         elif filter == 'Median filter':
             # median acts as a=low-pass filter ---- blurring effect
             # src : source file ---- ksize: int kernel size
             imgValues = cv2.medianBlur(imgValues, 21)
-            _, _, fftFiltered = self.toFFT(imgValues)
+            _, _, self.fft = self.toFFT(imgValues)
 
         elif filter == 'High pass filter':
             # # kernel = np.array([[-1, -1, -1], [-1,  8, -1], [-1, -1, -1]])
@@ -125,19 +139,23 @@ class MainWindow(QtWidgets.QMainWindow):
             # imgValues = cv2.boxFilter(imgValues, -1, (15, 15))
             # imgValues = imgFiltered[:, :, 2] - imgValues
             F1, F2, fftOG = self.toFFT(imgValues)
-            imgValues, fftHP, F2 = self.highPassFiltering(imgValues, F2)
+            imgValues, self.fft, F2 = self.highPassFiltering(imgValues, F2)
 
-        elif filter == 'Laplacian':
+        elif filter == 'Laplacian filter':
             # laplacian acts as hig-pass filter ---- edge detector
             # src : source file ---- ddepth : depth of output image ---- ksize : blurring kernel size
-            imgValues = cv2.Laplacian(imgValues, -1, (11, 11))
-            _, _, fftFiltered = self.toFFT(imgValues)
+            imgValues = cv2.GaussianBlur(imgValues, (3, 3), 0)
+            imgValues = cv2.Laplacian(imgValues, cv2.CV_64F, (11, 11))
+            _, _, self.fft = self.toFFT(imgValues)
 
         imgFiltered[:, :, 2] = imgValues
         imgFiltered = cv2.cvtColor(imgFiltered, cv2.COLOR_HSV2BGR)
         self.cvimg = imgFiltered
+        gray = cv2.cvtColor(self.cvimg, cv2.COLOR_BGR2GRAY)
         imgqt = self.convertCvQt(self.cvimg)
         self.displayImage(imgqt)
+        self.displayFFT()
+        self.showHistogram(gray)
 
     def toFFT(self, img):
         F1 = fp.fft2((img).astype(float))
@@ -148,8 +166,9 @@ class MainWindow(QtWidgets.QMainWindow):
     def highPassFiltering(self, img, F2):
         (w, h) = img.shape
         half_w, half_h = int(w / 2), int(h / 2)
-        n = 50  # high pass size
-        F2[half_w - n:half_w + n + 1, half_h - n:half_h + n +
+        self.size = 50  # high pass size
+        F2[half_w - self.size:half_w + self.size + 1,
+           half_h - self.size:half_h + self.size +
            1] = 0  # select all but the first 50x50 (low) frequencies
         fft = (20 * np.log10(0.1 + F2)).astype(int)
         img = fp.ifft2(fp.ifftshift(F2)).real
@@ -158,10 +177,11 @@ class MainWindow(QtWidgets.QMainWindow):
     def lowPassFiltering(self, img, F2):
         (w, h) = img.shape
         half_w, half_h = int(w / 2), int(h / 2)
-        n = 30  # low-pass size
+        self.size = 30  # low-pass size
         Fblank = np.zeros((w, h), np.uint8)
         # select the first 30x30 frequencies
-        Fblank[half_w - n:half_w + n + 1, half_h - n:half_h + n + 1] = 1
+        Fblank[half_w - self.size:half_w + self.size + 1,
+               half_h - self.size:half_h + self.size + 1] = 1
         F2 = Fblank * F2
         fft = (20 * np.log10(0.1 + F2)).astype(int)
         img = fp.ifft2(fp.ifftshift(F2)).real
@@ -204,9 +224,9 @@ class MainWindow(QtWidgets.QMainWindow):
     #Call this function to equalize your histogram
 
     def showHistogram(self, data):
+        self.histoCanvas.axes.clear()
         no_of_bins = np.arange(256)
         data_rav = data.ravel()  #spreads image pixels into one dimension
-        # histogram = plt.hist(data_rav, bins=no_of_bins)
         self.histoCanvas.axes.hist(data_rav, bins=no_of_bins)
         self.histoCanvas.draw()
         self.histoWidget.setCentralItem(self.graph)
@@ -221,7 +241,9 @@ class MainWindow(QtWidgets.QMainWindow):
         equalized_img = self.mapPixels(redistributedGrayScale, img_gray)
         self.showHistogram(equalized_img)
         img = self.convertCvQt(equalized_img)
+        _, _, self.fft = self.toFFT(equalized_img)
         self.displayImage(img)
+        self.displayFFT()
 
 
 ############################
