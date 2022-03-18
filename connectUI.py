@@ -127,10 +127,11 @@ class MainWindow(QtWidgets.QMainWindow):
             F1, F2, fftOG = self.toFFT(imgValues)
             imgValues, fftHP, F2 = self.highPassFiltering(imgValues, F2)
 
-        elif filter == 'Laplacian':
+        elif filter == 'Laplacian filter':
             # laplacian acts as hig-pass filter ---- edge detector
             # src : source file ---- ddepth : depth of output image ---- ksize : blurring kernel size
-            imgValues = cv2.Laplacian(imgValues, -1, (11, 11))
+            imgValues = cv2.GaussianBlur(imgValues, (3,3), 0)
+            imgValues = cv2.Laplacian(imgValues, cv2.CV_64F, (21, 21))
             _, _, fftFiltered = self.toFFT(imgValues)
 
         imgFiltered[:, :, 2] = imgValues

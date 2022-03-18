@@ -86,7 +86,7 @@
     </item>
     <item>
      <property name="text">
-      <string>Laplacian </string>
+      <string>Laplacian filter</string>
      </property>
     </item>
    </widget>

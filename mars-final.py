@@ -69,7 +69,8 @@ def chooseFilter(imgValues, filter):
     elif filter == 'laplacian':
         # laplacian acts as hig-pass filter ---- edge detector effect
         # src : source file ---- ddepth : depth of output image ---- ksize : blurring kernel size
-        imgValues = cv2.Laplacian(imgValues, -1, (51, 51))
+        imgValues = cv2.GaussianBlur(imgValues, (3,3), 0)
+        imgValues = cv2.Laplacian(imgValues, cv2.CV_64F, (21, 21))
         _, _, fftFiltered = toFFT(imgValues)
 
     return imgValues, fftFiltered
@@ -96,7 +97,7 @@ plt.subplot(222), plt.imshow(fftOG, 'gray'), plt.title('original freq')
 plt.axis('off')
 
 
-imgValues, fftFiltered = chooseFilter(imgValues, 'lowpass')
+imgValues, fftFiltered = chooseFilter(imgValues, 'laplacian')
 # overwrite v-vhannel in filtered image variable
 imgFiltered[:, :, 2] = imgValues
 imgFiltered = cv2.cvtColor(imgFiltered, cv2.COLOR_HSV2RGB)
