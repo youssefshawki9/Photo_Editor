@@ -25,6 +25,7 @@ class MplCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=5, height=4, dpi=100):
         self.fig = Figure(figsize=(width, height), dpi=dpi)
         self.axes = self.fig.add_subplot(111)
+        self.fig.set_facecolor('#e1e1e1')
         super(MplCanvas, self).__init__(self.fig)
 
 
@@ -57,17 +58,24 @@ class MainWindow(QtWidgets.QMainWindow):
         self.disply_width = 550
         self.display_height = 500
         self.size = self.filterSize.value()
-        self.sliderValue.setText(str(self.filterSize.value()))
+        # self.sliderValue.setText(str(self.filterSize.value()))
 
         self.histoCanvas = MplCanvas(self, width=5.5, height=4.5, dpi=90)
         self.histoLayout = QtWidgets.QVBoxLayout()
+        self.histoCanvas.axes.set_facecolor('#e1e1e1')
         self.histoLayout.addWidget(self.histoCanvas)
 
         self.fftCanvas = MplCanvas(self, width=5.5, height=4.5, dpi=90)
         self.fftLayout = QtWidgets.QVBoxLayout()
+        # self.fftCanvas.axes.set_facecolor('#e1e1e1')
         self.fftLayout.addWidget(self.fftCanvas)
 
         self.graph = pg.PlotItem()
+        self.fftWidget.setCentralItem(self.graph)
+        self.histoWidget.setCentralItem(self.graph)
+        self.fftWidget.setBackground(QtGui.QColor('#e1e1e1'))
+        self.histoWidget.setBackground(QtGui.QColor('#e1e1e1'))
+        #31c9ca #7dbeff #00aa7f
         pg.PlotItem.hideAxis(self.graph, 'left')
         pg.PlotItem.hideAxis(self.graph, 'bottom')
 
@@ -99,8 +107,7 @@ class MainWindow(QtWidgets.QMainWindow):
         convert_to_Qt_format = QtGui.QImage(rgb_image.data, w, h,
                                             bytes_per_line,
                                             QtGui.QImage.Format_RGB888)
-        p = convert_to_Qt_format.scaled(self.disply_width, self.display_height,
-                                        Qt.KeepAspectRatio)
+        p = convert_to_Qt_format.scaled(self.disply_width, self.display_height, Qt.KeepAspectRatio)
         return QPixmap.fromImage(p)
 
     def changeFilterSize(self):
@@ -111,6 +118,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def displayImage(self, qtimg):
         self.imageview.clear()
         self.imageview.setPixmap(qtimg)
+        self.sliderValue.setText(str(self.size))
+
 
     def displayFFT(self):
         self.fftCanvas.axes.imshow(self.fft, 'gray', aspect="auto")
@@ -138,10 +147,6 @@ class MainWindow(QtWidgets.QMainWindow):
             _, _, self.fft = self.toFFT(imgValues)
 
         elif filter == 'High pass filter':
-            # # kernel = np.array([[-1, -1, -1], [-1,  8, -1], [-1, -1, -1]])
-            # # imgValues = ndimage.convolve(imgValues, kernel)
-            # imgValues = cv2.boxFilter(imgValues, -1, (15, 15))
-            # imgValues = imgFiltered[:, :, 2] - imgValues
             F1, F2, fftOG = self.toFFT(imgValues)
             imgValues, self.fft, F2 = self.highPassFiltering(imgValues, F2)
 
