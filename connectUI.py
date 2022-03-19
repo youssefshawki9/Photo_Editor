@@ -56,6 +56,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.imageview = self.findChild(QLabel, "imageview")
         self.disply_width = 550
         self.display_height = 500
+        self.size = self.filterSize.value()
+        self.sliderValue.setText(str(self.filterSize.value()))
 
         self.histoCanvas = MplCanvas(self, width=5.5, height=4.5, dpi=90)
         self.histoLayout = QtWidgets.QVBoxLayout()
@@ -83,6 +85,7 @@ class MainWindow(QtWidgets.QMainWindow):
         _, _, self.fft = self.toFFT(self.OGgray)
         #cv image to Qpixmap
         qt_img = self.convertCvQt(self.cvimg)
+        print(self.Imgorigin.shape)
         # display it
         self.showHistogram(self.OGgray)
         self.displayFFT()
@@ -101,7 +104,8 @@ class MainWindow(QtWidgets.QMainWindow):
         return QPixmap.fromImage(p)
 
     def changeFilterSize(self):
-        self.size = self.filterSize.value
+        self.size = self.filterSize.value()
+        self.sliderValue.setText(str(self.size))
         self.spatialFiltering()
 
     def displayImage(self, qtimg):
@@ -130,7 +134,7 @@ class MainWindow(QtWidgets.QMainWindow):
         elif filter == 'Median filter':
             # median acts as a=low-pass filter ---- blurring effect
             # src : source file ---- ksize: int kernel size
-            imgValues = cv2.medianBlur(imgValues, 21)
+            imgValues = cv2.medianBlur(imgValues, self.size)
             _, _, self.fft = self.toFFT(imgValues)
 
         elif filter == 'High pass filter':
@@ -145,7 +149,8 @@ class MainWindow(QtWidgets.QMainWindow):
             # laplacian acts as hig-pass filter ---- edge detector
             # src : source file ---- ddepth : depth of output image ---- ksize : blurring kernel size
             imgValues = cv2.GaussianBlur(imgValues, (3, 3), 0)
-            imgValues = cv2.Laplacian(imgValues, cv2.CV_64F, (11, 11))
+            imgValues = cv2.Laplacian(imgValues, cv2.CV_64F,
+                                      (self.size, self.size))
             _, _, self.fft = self.toFFT(imgValues)
 
         imgFiltered[:, :, 2] = imgValues
@@ -166,7 +171,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def highPassFiltering(self, img, F2):
         (w, h) = img.shape
         half_w, half_h = int(w / 2), int(h / 2)
-        self.size = 50  # high pass size
         F2[half_w - self.size:half_w + self.size + 1,
            half_h - self.size:half_h + self.size +
            1] = 0  # select all but the first 50x50 (low) frequencies
@@ -177,7 +181,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def lowPassFiltering(self, img, F2):
         (w, h) = img.shape
         half_w, half_h = int(w / 2), int(h / 2)
-        self.size = 30  # low-pass size
         Fblank = np.zeros((w, h), np.uint8)
         # select the first 30x30 frequencies
         Fblank[half_w - self.size:half_w + self.size + 1,
