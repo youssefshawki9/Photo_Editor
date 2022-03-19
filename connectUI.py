@@ -44,9 +44,10 @@ class MainWindow(QtWidgets.QMainWindow):
         #### BUTTON CONNECTIONS
         ############################
         self.cvimg = [[]]
+        self.final = [[]]
         self.actionopen.triggered.connect(lambda: self.open())
         self.openButton.clicked.connect(lambda: self.open())
-        self.Equalize.clicked.connect(lambda: self.equalize(self.cvimg))
+        self.Equalize.clicked.connect(lambda: self.equalizeRGB(self.cvimg))
         self.comboBox.currentIndexChanged.connect(
             lambda: self.spatialFiltering())
         self.filterSize.valueChanged.connect(lambda: self.changeFilterSize())
@@ -129,7 +130,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.fftWidget.setLayout(self.fftLayout)
 
     def spatialFiltering(self):
-        imgFiltered = cv2.cvtColor(self.Imgorigin, cv2.COLOR_BGR2HSV)
+        imgFiltered = cv2.cvtColor(self.final, cv2.COLOR_BGR2HSV)
         imgValues = imgFiltered[:, :, 2]
         filter = self.comboBox.currentText()
 
@@ -241,15 +242,31 @@ class MainWindow(QtWidgets.QMainWindow):
         self.histoWidget.setLayout(self.histoLayout)
 
     def equalize(self, img):
-        img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        histoArray = self.createHistoArray(img_gray)
+        #img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        histoArray = self.createHistoArray(img)
         histoArray = np.transpose(histoArray)
         redistributedGrayScale = self.redistributeGrayScale(
-            histoArray, img_gray)
-        equalized_img = self.mapPixels(redistributedGrayScale, img_gray)
-        self.showHistogram(equalized_img)
-        img = self.convertCvQt(equalized_img)
-        _, _, self.fft = self.toFFT(equalized_img)
+            histoArray, img)
+        equalized_img = self.mapPixels(redistributedGrayScale, img)
+        return equalized_img
+
+    def createRGB(self,r,g,b):
+        rgb = np.dstack((r,g,b))
+        return rgb
+
+    def equalizeRGB(self,img):
+        r = img[:,:,2]
+        g = img[:,:,1]
+        b = img[:,:,0]
+
+        r_eq = self.equalize(r)
+        g_eq = self.equalize(g)
+        b_eq = self.equalize(b)
+
+        self.final = self.createRGB(b_eq , g_eq , r_eq)
+        self.showHistogram(self.final)
+        img = self.convertCvQt(self.final)
+        _, _, self.fft = self.toFFT(self.final)
         self.displayImage(img)
         self.displayFFT()
 
