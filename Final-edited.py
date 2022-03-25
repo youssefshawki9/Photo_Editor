@@ -154,23 +154,24 @@ class MainWindow(QtWidgets.QMainWindow):
             imgFiltered = cv2.cvtColor(imgFiltered, cv2.COLOR_HSV2BGR)
 
         if filter == 'Low pass filter':
-            # F1, F2, fftOG = self.toFFT(imgValues)
-            # imgValues, self.fft, F2 = self.lowPassFiltering(imgValues, F2)
-            # imgFiltered[:, :, 2] = imgValues
-            # imgFiltered = cv2.cvtColor(imgFiltered, cv2.COLOR_HSV2BGR)
-
-            imgValues = cv2.cvtColor(imgCopy, cv2.COLOR_RGB2GRAY)
             F1, F2, fftOG = self.toFFT(imgValues)
-            Fbgr = F2
-            _, self.fft, F2 = self.lowPassFiltering(imgValues, F2)
-            imgR = cv2.GaussianBlur(imgR, (9,9), 0)
-            imgG = cv2.GaussianBlur(imgG, (9,9), 0)
-            imgB = cv2.GaussianBlur(imgB, (9,9), 0)
-            imgR, _, _ = self.lowPassFiltering(imgR, Fbgr)
-            imgG, _, _ = self.lowPassFiltering(imgG, Fbgr)
-            imgB, _, _ = self.lowPassFiltering(imgB, Fbgr)
-            imgFiltered = cv2.merge([imgB, imgG, imgR])
-            imgFiltered = imgFiltered.astype('uint8')
+            imgValues, self.fft, F2 = self.lowPassFiltering(imgValues, F2)
+            imgValues = cv2.GaussianBlur(imgValues, (3,3), 0)
+            imgFiltered[:, :, 2] = imgValues
+            imgFiltered = cv2.cvtColor(imgFiltered, cv2.COLOR_HSV2BGR)
+
+            # imgValues = cv2.cvtColor(imgCopy, cv2.COLOR_RGB2GRAY)
+            # F1, F2, fftOG = self.toFFT(imgValues)
+            # Fbgr = F2
+            # _, self.fft, F2 = self.lowPassFiltering(imgValues, F2)
+            # imgR = cv2.GaussianBlur(imgR, (9,9), 0)
+            # imgG = cv2.GaussianBlur(imgG, (9,9), 0)
+            # imgB = cv2.GaussianBlur(imgB, (9,9), 0)
+            # imgR, _, _ = self.lowPassFiltering(imgR, Fbgr)
+            # imgG, _, _ = self.lowPassFiltering(imgG, Fbgr)
+            # imgB, _, _ = self.lowPassFiltering(imgB, Fbgr)
+            # imgFiltered = cv2.merge([imgB, imgG, imgR])
+            # imgFiltered = imgFiltered.astype('uint8')
 
             # imgValues = cv2.cvtColor(imgCopy, cv2.COLOR_RGB2GRAY)
             # F1, F2, fftOG = self.toFFT(imgValues)
@@ -178,6 +179,17 @@ class MainWindow(QtWidgets.QMainWindow):
             # imgValues, self.fft, F2 = self.lowPassFiltering(imgValues, F2)
             # imgFiltered = imgValues.astype('uint8')
             # imgFiltered = cv2.cvtColor(imgFiltered, cv2.COLOR_GRAY2BGR)
+
+            # imgValues = cv2.cvtColor(imgCopy, cv2.COLOR_RGB2GRAY)
+            # F1, F2, fftOG = self.toFFT(imgValues)
+            # imgValues = cv2.GaussianBlur(imgValues, (9,9), 0)
+            # imgValues, self.fft, F2 = self.lowPassFiltering(imgValues, F2)
+            # imgCopy[:,:,0] = imgValues
+            # imgCopy[:,:,1] = imgValues
+            # imgCopy[:,:,2] = imgValues
+            # # imgFiltered = cv2.merge([imgValues, imgValues, imgValues])
+            # # imgFiltered = imgFiltered.astype('uint8')
+            # # imgFiltered = cv2.cvtColor(imgFiltered, cv2.COLOR_GRAY2BGR)
 
 
         elif filter == 'Median filter':
@@ -189,22 +201,22 @@ class MainWindow(QtWidgets.QMainWindow):
             imgFiltered = cv2.cvtColor(imgFiltered, cv2.COLOR_HSV2BGR)
 
         elif filter == 'High pass filter':
-            # F1, F2, fftOG = self.toFFT(imgValues)
-            # imgValues, self.fft, F2 = self.highPassFiltering(imgValues, F2)
-            # imgFiltered[:, :, 2] = imgValues
-            # imgFiltered = cv2.cvtColor(imgFiltered, cv2.COLOR_HSV2BGR)
-
-            imgValues = cv2.cvtColor(imgCopy, cv2.COLOR_RGB2GRAY)
             F1, F2, fftOG = self.toFFT(imgValues)
-            Fbgr = F2
-            _, self.fft, F2 = self.highPassFiltering(imgValues, F2)
-            imgR, _, _ = self.highPassFiltering(imgR, Fbgr)
-            imgG, _, _ = self.highPassFiltering(imgG, Fbgr)
-            imgB, _, _ = self.highPassFiltering(imgB, Fbgr)
-            imgRGB[:,:,0] = imgR
-            imgRGB[:,:,1] = imgG
-            imgRGB[:,:,2] = imgB
-            imgFiltered = cv2.cvtColor(imgRGB, cv2.COLOR_RGB2BGR)
+            imgValues, self.fft, F2 = self.highPassFiltering(imgValues, F2)
+            imgFiltered[:, :, 2] = imgValues
+            imgFiltered = cv2.cvtColor(imgFiltered, cv2.COLOR_HSV2BGR)
+
+            # imgValues = cv2.cvtColor(imgCopy, cv2.COLOR_RGB2GRAY)
+            # F1, F2, fftOG = self.toFFT(imgValues)
+            # Fbgr = F2
+            # _, self.fft, F2 = self.highPassFiltering(imgValues, F2)
+            # imgR, _, _ = self.highPassFiltering(imgR, Fbgr)
+            # imgG, _, _ = self.highPassFiltering(imgG, Fbgr)
+            # imgB, _, _ = self.highPassFiltering(imgB, Fbgr)
+            # imgRGB[:,:,0] = imgR
+            # imgRGB[:,:,1] = imgG
+            # imgRGB[:,:,2] = imgB
+            # imgFiltered = cv2.cvtColor(imgRGB, cv2.COLOR_RGB2BGR)
 
 
         elif filter == 'Laplacian filter':

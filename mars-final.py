@@ -80,6 +80,7 @@ def chooseFilter(imgValues, filter):
 #########################################
 # MAIN
 #########################################
+fig = plt.figure(figsize=(10, 10))
 
 # keep original image under imgOG
 imgOG = cv2.imread('lena.png')
@@ -104,10 +105,14 @@ imgFiltered = cv2.cvtColor(imgOG, cv2.COLOR_BGR2GRAY)
 # print(imgFiltered.shape)
 imgValues = imgFiltered
 
-imgFiltered, fftFiltered = chooseFilter(imgValues, 'lowpass')
+imgFiltered = imgOG.copy()
+imgFiltered = cv2.cvtColor(imgOG, cv2.COLOR_BGR2HSV)
+print(imgFiltered.shape )
+imgValues = imgFiltered[:,:,2]
+imgValues, fftFiltered = chooseFilter(imgValues, 'lowpass')
 # overwrite v-vhannel in filtered image variable
-# imgFiltered[:, :, 2] = imgValues
-# imgFiltered = cv2.cvtColor(imgFiltered, cv2.COLOR_HSV2RGB)
+imgFiltered[:, :, 2] = imgValues
+imgFiltered = cv2.cvtColor(imgFiltered, cv2.COLOR_HSV2RGB)
 plt.subplot(323), plt.imshow(imgFiltered, cmap='gray'), plt.title('Effect after filtering gray')
 plt.axis('off')
 plt.subplot(324), plt.imshow(fftFiltered, 'gray'), plt.title('filter frequency gray')

@@ -228,7 +228,7 @@ class MainWindow(QtWidgets.QMainWindow):
            half_h - self.size:half_h + self.size + 1] = 0
            # select all but the first 50x50 (low) frequencies
         fft = (20 * np.log10(0.1 + F2)).astype(int)
-        img = fp.ifft2(fp.ifftshift(F2)).real
+        img = np.abs(fp.ifft2(fp.ifftshift(F2)))
         return img, fft, F2
 
     def lowPassFiltering(self, img, F2):
@@ -240,7 +240,7 @@ class MainWindow(QtWidgets.QMainWindow):
                half_h - self.size:half_h + self.size + 1] = 1
         F2 = Fblank * F2
         fft = (20 * np.log10(0.1 + F2)).astype(int)
-        img = fp.ifft2(fp.ifftshift(F2)).real
+        img = np.abs(fp.ifft2(fp.ifftshift(F2)))
         return img, fft, F2
 
     def createHistoArray(self, img):
