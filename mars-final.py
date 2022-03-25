@@ -53,6 +53,7 @@ def chooseFilter(imgValues, filter):
     if filter == 'lowpass':
         # move to frequency domain then apply lowpass filter
         F1, F2, fftOG = toFFT(imgValues)
+        imgValues = cv2.GaussianBlur(imgValues, (9,9), 0)
         imgValues, fftFiltered, F2 = lowPassFiltering(imgValues, F2)
 
     elif filter == 'median':
@@ -81,7 +82,7 @@ def chooseFilter(imgValues, filter):
 #########################################
 
 # keep original image under imgOG
-imgOG = cv2.imread('rand.jpg')
+imgOG = cv2.imread('lena.png')
 # keep filtered image under imgFiltered
 imgFiltered = imgOG.copy()
 imgFiltered = cv2.cvtColor(imgOG, cv2.COLOR_BGR2HSV)
@@ -91,20 +92,37 @@ imgOG = cv2.cvtColor(imgOG, cv2.COLOR_BGR2RGB)
 imgValues = imgFiltered[:, :, 2]
 
 _, _, fftOG = toFFT(imgValues)
-plt.subplot(221), plt.imshow(imgOG), plt.title('Original Image')
+plt.subplot(321), plt.imshow(imgOG), plt.title('Original Image')
 plt.axis('off')
-plt.subplot(222), plt.imshow(fftOG, 'gray'), plt.title('original freq')
+plt.subplot(322), plt.imshow(fftOG, 'gray'), plt.title('original freq')
 plt.axis('off')
 
 
-imgValues, fftFiltered = chooseFilter(imgValues, 'laplacian')
+imgFiltered = cv2.cvtColor(imgOG, cv2.COLOR_HSV2BGR)
+imgFiltered = cv2.cvtColor(imgOG, cv2.COLOR_BGR2GRAY)
+
+# print(imgFiltered.shape)
+imgValues = imgFiltered
+
+imgFiltered, fftFiltered = chooseFilter(imgValues, 'lowpass')
 # overwrite v-vhannel in filtered image variable
-imgFiltered[:, :, 2] = imgValues
-imgFiltered = cv2.cvtColor(imgFiltered, cv2.COLOR_HSV2RGB)
-plt.subplot(223), plt.imshow(imgFiltered), plt.title('Effect after filtering')
+# imgFiltered[:, :, 2] = imgValues
+# imgFiltered = cv2.cvtColor(imgFiltered, cv2.COLOR_HSV2RGB)
+plt.subplot(323), plt.imshow(imgFiltered, cmap='gray'), plt.title('Effect after filtering gray')
 plt.axis('off')
-plt.subplot(224), plt.imshow(fftFiltered, 'gray'), plt.title('filter frequency')
+plt.subplot(324), plt.imshow(fftFiltered, 'gray'), plt.title('filter frequency gray')
 plt.axis('off')
+
+
+imgCopy = imgOG.copy()
+# imgCopy = cv2.cvtColor(imgCopy, cv2.COLOR_HSV2BGR)
+(imgB, imgG, imgR) = cv2.split(imgCopy)
+img = cv2.merge([imgB, imgG, imgR])
+# img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+img = img.astype('uint8')
+plt.subplot(325), plt.imshow(img), plt.title('splitting and merging')
+plt.axis('off')
+
 
 # imgValues, fftFiltered = chooseFilter(imgValues, 'median')
 # # overwrite v-vhannel in filtered image variable
