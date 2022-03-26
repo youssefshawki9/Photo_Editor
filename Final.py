@@ -5,6 +5,7 @@ import os
 import sys
 
 import cv2
+import matplotlib.pyplot as plt
 import numpy as np
 import pyqtgraph as pg
 import scipy.fftpack as fp
@@ -101,7 +102,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.displayImage(qt_img)
 
     def save(self):
-        cv2.imwrite('saved.jpg',self.cvimg)
+        cv2.imwrite('saved.jpg', self.cvimg)
 
     def convertCvQt(self, img):
         """Convert from an opencv image to QPixmap"""
@@ -139,8 +140,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         if filter == 'Normal':
             _, _, self.fft = self.toFFT(self.OGgray)
+            self.final = self.Imgorigin
             imgFiltered = cv2.cvtColor(self.Imgorigin, cv2.COLOR_BGR2HSV)
-            imgValues =  imgFiltered[:, :, 2]
+            imgValues = imgFiltered[:, :, 2]
 
         if filter == 'Low pass filter':
             F1, F2, fftOG = self.toFFT(imgValues)
@@ -154,7 +156,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         elif filter == 'High pass filter':
             F1, F2, fftOG = self.toFFT(imgValues)
+            #self.final = cv2.cvtColor(self.Imgorigin, cv2.COLOR_BGR2RGB)
             imgValues, self.fft, F2 = self.highPassFiltering(imgValues, F2)
+            # print(F2[0:100,0:100])
 
         elif filter == 'Laplacian filter':
             # laplacian acts as hig-pass filter ---- edge detector
@@ -162,12 +166,13 @@ class MainWindow(QtWidgets.QMainWindow):
             imgValues = cv2.GaussianBlur(imgValues, (3, 3), 0)
             imgValues = cv2.Laplacian(imgValues, cv2.CV_64F,
                                       (self.size, self.size))
+            imgValues = np.abs(imgValues)
             _, _, self.fft = self.toFFT(imgValues)
         elif filter == 'Low pass filter spatial':
-            imgValues , self.fft = self.lowPassFilterSpatial(imgValues)
+            imgValues, self.fft = self.lowPassFilterSpatial(imgValues)
 
         elif filter == 'High pass filter spatial':
-            imgValues , self.fft = self.highPassFilterSpatial(imgValues)
+            imgValues, self.fft = self.highPassFilterSpatial(imgValues)
 
         imgFiltered[:, :, 2] = imgValues
         imgFiltered = cv2.cvtColor(imgFiltered, cv2.COLOR_HSV2BGR)
@@ -181,39 +186,94 @@ class MainWindow(QtWidgets.QMainWindow):
     def toFFT(self, img):
         F1 = fp.fft2((img).astype(float))
         F2 = fp.fftshift(F1)
+        plt.figure()
+        plt.plot(F2)
         fft = (20 * np.log10(0.1 + F2)).astype(int)
         return F1, F2, fft
 
-    def lowPassFilterSpatial (self , img ):
+    def lowPassFilterSpatial(self, img):
         m, n = img.shape
         # Develop Averaging filter(3, 3) mask
-        mask = np.ones([3, 3], dtype = int)
+        mask = np.ones([3, 3], dtype=int)
         mask = mask / 9
         # Convolve the 3X3 mask over the image
         img_new = np.zeros([m, n])
 
-        for i in range(1, m-1):
-            for j in range(1, n-1):
-                temp = img[i-1, j-1]*mask[0, 0]+img[i-1, j]*mask[0, 1]+img[i-1, j + 1]*mask[0, 2]+img[i, j-1]*mask[1, 0]+ img[i, j]*mask[1, 1]+img[i, j + 1]*mask[1, 2]+img[i + 1, j-1]*mask[2, 0]+img[i + 1, j]*mask[2, 1]+img[i + 1, j + 1]*mask[2, 2]
-                img_new[i, j]= temp
-        _,_,fft = self.toFFT(img_new)
-        return img_new,fft
+        for i in range(1, m - 1):
+            for j in range(1, n - 1):
+                temp = img[i - 1, j - 1] * mask[0, 0] + img[i - 1, j] * mask[
+                    0, 1] + img[i - 1, j + 1] * mask[0, 2] + img[
+                        i, j - 1] * mask[1, 0] + img[i, j] * mask[1, 1] + img[
+                            i, j + 1] * mask[1, 2] + img[i + 1, j - 1] * mask[
+                                2, 0] + img[i + 1, j] * mask[2, 1] + img[
+                                    i + 1, j + 1] * mask[2, 2]
+                img_new[i, j] = temp
+        _, _, fft = self.toFFT(img_new)
+        return img_new, fft
 
-    def highPassFilterSpatial (self , img ):
+    def high_pass_freq_filter(self, img):
+        try:
+            flag = 0
+            _, _ = img.shape
+            dft = np.fft.fft2(img)
+        except:
+            flag = 1
+            img = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
+            dft = np.fft.fft2(img[:, :, 2])
+
+        dft_shift = np.fft.fftshift(dft)
+        magnitude_spectrum = 20 * np.log(np.abs(dft_shift) + 1)
+
+        rows, cols = dft.shape
+        crow, ccol = int(rows / 2), int(cols / 2)
+        mask = np.ones((rows, cols), np.uint8)
+
+        r = 40
+        center = [crow, ccol]
+        x, y = np.ogrid[:rows, :cols]
+        mask_area = (x - center[0]) * 2 + (y - center[1]) * 2 <= r * r
+        mask[mask_area] = 0
+        # apply mask and inverse DFT
+        fshift = dft_shift * mask
+        #--------------------------------------------------------------------------------------------------
+        # revers from the freq domain to spatial domain
+
+        fshift_mask_mag = 20 * np.log(np.abs(fshift) + 1)
+
+        f_ishift = np.fft.ifftshift(fshift)
+        img_back = np.fft.ifft2(f_ishift)
+        img_filtered = np.abs(img_back)
+
+        if (flag == 1):
+            img[:, :, 2] = img_filtered
+            img = cv2.cvtColor(img, cv2.COLOR_HSV2RGB)
+            return img, magnitude_spectrum, fshift_mask_mag
+
+        return img_filtered, magnitude_spectrum, fshift_mask_mag
+
+    def highPassFilterSpatial(self, img):
         m, n = img.shape
         # Develop Averaging filter(3, 3) mask
-        mask = np.ones([3, 3], dtype = int)
+        mask = np.ones([3, 3], dtype=int)
         mask = mask / -9
-        mask[2,2] = mask[2,2]*-8
+        mask[2, 2] = mask[2, 2] * -8
+        # mask = np.array([[1, 0, -1], [1, 0, -1], [1, 0, -1]])
         # Convolve the 3X3 mask over the image
         img_new = np.zeros([m, n])
 
-        for i in range(1, m-1):
-            for j in range(1, n-1):
-                temp = img[i-1, j-1]*mask[0, 0]+img[i-1, j]*mask[0, 1]+img[i-1, j + 1]*mask[0, 2]+img[i, j-1]*mask[1, 0]+ img[i, j]*mask[1, 1]+img[i, j + 1]*mask[1, 2]+img[i + 1, j-1]*mask[2, 0]+img[i + 1, j]*mask[2, 1]+img[i + 1, j + 1]*mask[2, 2]
-                img_new[i, j]= temp
-        _,_,fft = self.toFFT(img_new)
-        return img_new,fft
+        for i in range(1, m - 1):
+            for j in range(1, n - 1):
+                temp = img[i - 1, j - 1] * mask[0, 0] + img[i - 1, j] * mask[
+                    0, 1] + img[i - 1, j + 1] * mask[0, 2] + img[
+                        i, j - 1] * mask[1, 0] + img[i, j] * mask[1, 1] + img[
+                            i, j + 1] * mask[1, 2] + img[i + 1, j - 1] * mask[
+                                2, 0] + img[i + 1, j] * mask[2, 1] + img[
+                                    i + 1, j + 1] * mask[2, 2]
+                img_new[i, j] = temp
+
+        img_new = np.abs(img_new)
+        _, _, fft = self.toFFT(img_new)
+        return img_new, fft
 
     def highPassFiltering(self, img, F2):
         (w, h) = img.shape
@@ -222,7 +282,7 @@ class MainWindow(QtWidgets.QMainWindow):
            half_h - self.size:half_h + self.size +
            1] = 0  # select all but the first 50x50 (low) frequencies
         fft = (20 * np.log10(0.1 + F2)).astype(int)
-        img = fp.ifft2(fp.ifftshift(F2)).real
+        img = np.abs(fp.ifft2(fp.ifftshift(F2)))
         return img, fft, F2
 
     def lowPassFiltering(self, img, F2):
@@ -234,7 +294,7 @@ class MainWindow(QtWidgets.QMainWindow):
                half_h - self.size:half_h + self.size + 1] = 1
         F2 = Fblank * F2
         fft = (20 * np.log10(0.1 + F2)).astype(int)
-        img = fp.ifft2(fp.ifftshift(F2)).real
+        img = np.abs(fp.ifft2(fp.ifftshift(F2)))
         return img, fft, F2
 
     def createHistoArray(self, img):
