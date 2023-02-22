@@ -8,6 +8,6 @@ _**Short Description :**_ Letting the user browse through the gallery for an ima
   
 ---  
 _**DEMO**_  
-![](./demo/imgeditor.gif)  
+![](./imgeditor.gif)  
 
 ---  
